@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>EFB 737</title>
+    <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app">
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-title">
+                    <h1>EFB 737</h1>
+                    <span class="app-version">1.0</span>
+                </div>
+                <span class="training-label">SIM / TRAINING ONLY</span>
+            </div>
+            <div class="top-actions">
+                <span id="routeStatus" class="pill header-route" role="status" aria-live="polite">Noch kein Flugplan geladen</span>
+                <time class="pill header-utc" id="utcClock" aria-label="Aktuelle Uhrzeit in UTC" datetime="">--:--:-- UTC</time>
+                <button type="button" class="primary" id="chartTopButton">ChartFox</button>
+                <button type="button" class="ghost" id="resetAllButton">Reset</button>
+            </div>
+        </header>
+
+        <nav class="view-tabs" aria-label="Ansichten">
+            <button type="button" class="nav-item active" data-view="checklist" aria-label="Checklist">
+                <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5h11M8 12h11M8 19h11M3.5 5.5l1 1 2-2M3.5 12.5l1 1 2-2M3.5 19.5l1 1 2-2"/></svg></span><span>Checklist</span>
+            </button>
+            <button type="button" class="nav-item" data-view="abnormal" aria-label="Abnormal">
+                <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 19h18.4L12 3Z"/><path d="M12 9v4m0 3h.01"/></svg></span><span>Abnormal</span>
+            </button>
+            <button type="button" class="nav-item" data-view="charts" aria-label="ChartFox">
+                <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4.5h16v15H4zM8 8h8M8 12h8M8 16h5"/></svg></span><span>ChartFox</span>
+            </button>
+            <button type="button" class="nav-item" data-view="map" aria-label="Radar und Flugplan">
+                <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5 8.5 3l7 2.5L21 3v15.5L15.5 21l-7-2.5L3 21V5.5Z"/><path d="M8.5 3v15.5m7-13V21"/></svg></span><span>Radar</span>
+            </button>
+            <button type="button" class="nav-item" data-view="airport" aria-label="Airport">
+                <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z"/><circle cx="12" cy="9" r="2.3"/></svg></span><span>Airport</span>
+            </button>
+            <button type="button" class="nav-item" data-view="takeoff" aria-label="Takeoff">
+                <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 14 8-3 4-7a1.7 1.7 0 0 1 3 1l-2 7 5 3v2l-7-1-3 4-1.5-.5 1-4L3 16v-2Z"/></svg></span><span>Takeoff</span>
+            </button>
+            <button type="button" class="nav-item" data-view="landing" aria-label="Landing">
+                <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 8 3 4 7a1.7 1.7 0 0 0 3-1l-2-7 5-3V7l-7 1-3-4-1.5.5 1 4L3 8v2Z"/></svg></span><span>Landing</span>
+            </button>
+            <button type="button" class="nav-item" data-view="fuel" aria-label="Fuel">
+                <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h9v17H6zM8.5 6h4v5h-4zM15 7h2l2 2v8a2 2 0 0 0 4 0v-5l-2-2"/></svg></span><span>Fuel</span>
+            </button>
+            <button type="button" class="nav-item" data-view="notes" aria-label="Notizen">
+                <span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3.5h14v17H5zM8 8h8m-8 4h8m-8 4h5"/></svg></span><span>Notizen</span>
+            </button>
+        </nav>
+
+        <main class="workspace">
+            <section class="panel view checklist-layout active" id="checklistView">
+                <aside class="phase-rail" id="phaseRail" aria-label="Checklist-Abschnitte"></aside>
+                <div class="checklist-content">
+                    <div class="phase-header glass">
+                        <div>
+                            <p id="phaseRole">FO</p>
+                            <h2 id="phaseTitle">Preflight</h2>
+                            <p class="phase-completion hidden" id="phaseCompletionStatus" role="status" aria-live="polite"></p>
+                        </div>
+                        <div class="phase-actions">
+                            <span id="phaseCount">0 / 0</span>
+                            <button type="button" id="resetPhaseButton">Abschnitt reset</button>
+                        </div>
+                    </div>
+                    <div class="progress"><span id="phaseProgress"></span></div>
+                    <div class="checklist" id="checklistItems"></div>
+                    <div class="checklist-custom-actions">
+                        <button type="button" class="primary" id="addChecklistItemButton" aria-expanded="false" aria-controls="addChecklistItemForm">+ Punkt hinzufügen</button>
+                        <span class="checklist-drag-hint">Zum Sortieren gedrückt halten und ziehen</span>
+                    </div>
+                    <form id="addChecklistItemForm" class="checklist-add-form hidden">
+                        <label>Checklistenpunkt
+                            <input name="label" type="text" maxlength="120" required placeholder="z. B. Fuel quantity">
+                        </label>
+                        <label>Antwort / Soll-Zustand
+                            <input name="response" type="text" maxlength="120" placeholder="z. B. CHECKED">
+                        </label>
+                        <label>Crew
+                            <input name="crew" type="text" maxlength="12" placeholder="z. B. PF">
+                        </label>
+                        <label>Position
+                            <input name="position" type="number" min="1" step="1" value="1" inputmode="numeric" required>
+                        </label>
+                        <div class="checklist-add-actions">
+                            <button type="submit" class="primary">Hinzufügen</button>
+                            <button type="button" class="ghost" id="cancelAddChecklistItemButton">Abbrechen</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <section class="panel view" id="abnormalView">
+                <div class="module glass abnormal-module">
+                    <div class="phase-header glass">
+                        <div>
+                            <p>QRH · NON-NORMAL CHECKLISTS</p>
+                            <h2 id="abnormalChecklistTitle">Quick Action Index</h2>
+                            <p class="phase-completion hidden" id="abnormalCompletionStatus" role="status" aria-live="polite"></p>
+                        </div>
+                        <div class="phase-actions">
+                            <span id="abnormalChecklistCount">0 / 0</span>
+                            <button type="button" id="abnormalResetButton">Abschnitt reset</button>
+                        </div>
+                    </div>
+                    <div class="progress"><span id="abnormalChecklistProgress"></span></div>
+                    <form class="abnormal-search" id="abnormalSearchForm">
+                        <label for="abnormalSearchInput">Im QRH suchen</label>
+                        <div>
+                            <input id="abnormalSearchInput" type="search" placeholder="Checkliste, Warnleuchte oder Begriff" autocomplete="off">
+                            <button type="submit" class="primary">Suchen</button>
+                            <button type="button" class="ghost" id="abnormalIndexButton">Quick Action Index</button>
+                        </div>
+                    </form>
+                    <p class="abnormal-status" id="abnormalSearchStatus" role="status" aria-live="polite"></p>
+                    <div class="checklist" id="abnormalChecklistItems"></div>
+                    <details class="abnormal-source">
+                        <summary>QRH-Originalseite anzeigen</summary>
+                        <div class="abnormal-pdf-tools">
+                            <button type="button" id="abnormalPdfPrev">Seite zurück</button>
+                            <label for="abnormalPdfPage">Seite</label>
+                            <input id="abnormalPdfPage" type="number" min="1" value="1" inputmode="numeric">
+                            <span id="abnormalPdfPageCount">/ …</span>
+                            <button type="button" id="abnormalPdfNext">Seite weiter</button>
+                            <button type="button" id="abnormalPdfZoomOut">Zoom −</button>
+                            <button type="button" id="abnormalPdfZoomIn">Zoom +</button>
+                        </div>
+                        <p class="abnormal-pdf-status" id="abnormalPdfStatus" role="status">Originalseite wird beim Öffnen geladen.</p>
+                        <div class="abnormal-pdf-viewer" id="abnormalPdfViewer" aria-label="QRH PDF-Seite"></div>
+                    </details>
+                </div>
+            </section>
+
+            <section class="panel view" id="chartsView">
+                <div class="module glass chart-module">
+                    <div class="module-head">
+                        <div>
+                            <p>ChartFox Aviation</p>
+                            <h2>Chart Reader & Browser</h2>
+                        </div>
+                        <div class="chart-actions">
+                            <button type="button" class="primary" id="chartMainButton">ChartFox öffnen</button>
+                            <label class="file-pick compact">
+                                Charts laden (PDF / Bild)
+                                <input id="chartFileInput" type="file" accept="application/pdf,image/*,.pdf,.png,.jpg,.jpeg,.json,.txt,.xml" multiple>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="chart-document-tabs" id="chartDocumentTabs" role="tablist" aria-label="Geöffnete Charts">
+                        <span class="chart-tabs-empty">Noch keine Charts geöffnet</span>
+                    </div>
+                    <div class="chart-toolbar">
+                        <button type="button" id="chartPdfPrev">Zurück</button>
+                        <span id="chartPdfPageLabel">Seite 1 / 1</span>
+                        <button type="button" id="chartPdfNext">Weiter</button>
+                        <button type="button" id="chartRotateLeft" aria-label="Datei 90 Grad nach links drehen">↶ 90°</button>
+                        <button type="button" id="chartRotateRight" aria-label="Datei 90 Grad nach rechts drehen">↷ 90°</button>
+                        <button type="button" id="chartDrawToggle" aria-pressed="false">Zeichnen</button>
+                        <div class="chart-drawing-tools hidden" id="chartDrawingTools" aria-label="Zeichenwerkzeuge">
+                            <span class="chart-drawing-tools-label">Farbe</span>
+                            <button type="button" class="chart-color-swatch is-selected" data-draw-color="#ff3030" style="--draw-color:#ff3030" aria-label="Rot" aria-pressed="true"></button>
+                            <button type="button" class="chart-color-swatch" data-draw-color="#ffcc00" style="--draw-color:#ffcc00" aria-label="Gelb" aria-pressed="false"></button>
+                            <button type="button" class="chart-color-swatch" data-draw-color="#00a0e2" style="--draw-color:#00a0e2" aria-label="Blau" aria-pressed="false"></button>
+                            <button type="button" class="chart-color-swatch" data-draw-color="#00c781" style="--draw-color:#00c781" aria-label="Grün" aria-pressed="false"></button>
+                            <label class="chart-custom-color" for="chartCustomColor">Eigene Farbe
+                                <input id="chartCustomColor" type="color" value="#ff3030" aria-label="Eigene Zeichenfarbe auswählen">
+                            </label>
+                            <button type="button" id="chartEraserToggle" aria-pressed="false">Radierer</button>
+                            <button type="button" id="chartDrawClear">Zeichnung löschen</button>
+                        </div>
+                        <span id="chartStatus" class="status-text">Keine Chart geöffnet</span>
+                    </div>
+                    <div class="chart-viewer-frame" id="chartViewer">
+                        <div class="empty">Keine Chart geladen. Klicke auf "Chart laden" oder öffne ChartFox.</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel view" id="mapView">
+                <div class="module glass map-module">
+                    <div class="module-head">
+                        <div>
+                            <p>Wetter & Route</p>
+                            <h2>Radar / Flugplan</h2>
+                        </div>
+                        <label class="file-pick compact">
+                            Flugplan hochladen
+                            <input id="flightPlanInput" type="file" accept=".pln,.gpx,.fms,.txt,.csv,.json,.xml">
+                        </label>
+                    </div>
+                    <p class="control-group-label">Route</p>
+                    <div class="route-tools route-import-tools">
+                        <label class="simbrief-field">
+                            <span>SimBrief Nutzername / User-ID</span>
+                            <input id="simbriefUsername" type="text" inputmode="text" autocapitalize="off" autocomplete="username" spellcheck="false" placeholder="Nutzername oder ID">
+                        </label>
+                        <button type="button" class="ghost" id="simbriefNativeInputButton">ID eingeben</button>
+                        <button type="button" class="primary" id="simbriefLoadButton">SimBrief-Flugplan laden</button>
+                    </div>
+                    <div class="route-tools route-manage-tools">
+                        <button type="button" id="fitRouteButton">Route auf Karte zentrieren</button>
+                        <button type="button" id="clearRouteButton">Route löschen</button>
+                    </div>
+                    <div class="map-layer-toggles" aria-label="Kartenebenen">
+                        <label><input id="forecastLayerToggle" type="checkbox" checked> Vorhersage (Open-Meteo)</label>
+                        <label><input id="rainViewerLayerToggle" type="checkbox" checked> Radar (aktuell) · Echtwetter</label>
+                        <label><input id="routeLayerToggle" type="checkbox" checked> Route</label>
+                    </div>
+                    <div class="xplane-status-row">
+                        <span id="xplaneTelemetryStatus" role="status" aria-live="polite">X-Plane-Verbindung wird vorbereitet...</span>
+                        <button type="button" id="centerAircraftButton">Flugzeug zentrieren</button>
+                    </div>
+
+                    <div class="xplane-track-row">
+                        <span id="xplaneTrackStatus" role="status" aria-live="polite">Noch keine Flugspur aufgezeichnet</span>
+                        <button type="button" id="clearFlightTrackButton">Flugspur löschen</button>
+                    </div>
+                    <div class="map-actions combined-map-actions" id="rainViewerPlaybackControls">
+                        <span class="control-group-label">RainViewer · Echtwetter · UTC / lokal</span>
+                        <div class="radar-time-slider">
+                            <label for="rainViewerTimeSlider">Radarzeit</label>
+                            <input id="rainViewerTimeSlider" type="range" min="0" max="11" step="1" value="0" aria-label="RainViewer-Radarframes der vergangenen zwei Stunden">
+                            <output id="rainViewerTimeLabel" for="rainViewerTimeSlider">Wird geladen</output>
+                        </div>
+                        <div class="radar-playback-controls">
+                            <button type="button" id="radarPrev">Zurück</button>
+                            <button type="button" id="radarPlay">Play</button>
+                            <button type="button" id="radarNext">Weiter</button>
+                            <button type="button" class="primary" id="radarRefresh">Aktualisieren</button>
+                        </div>
+                    </div>
+                    <div class="radar-status" id="radarStatus">Radar lädt...</div>
+                    <div class="map-frame" id="flightMap"></div>
+                    <div class="weather-legend radar-precipitation-legend" aria-label="RainViewer Niederschlagslegende">
+                        <span><i class="legend-swatch radar-rain-gradient"></i>Regen · leicht bis stark</span>
+                        <span><i class="legend-swatch radar-snow-swatch"></i>Schnee</span>
+                        <span>Weather data by <a href="https://rainviewer.com" target="_blank" rel="noopener noreferrer">RainViewer</a></span>
+                    </div>
+                    <div class="route-list" id="routeList"></div>
+                    <div class="route-airport-weather" id="routeAirportWeather" aria-live="polite"></div>
+                    <p class="map-attribution">Weather data by <a href="https://rainviewer.com" target="_blank" rel="noopener noreferrer">RainViewer</a>. Niederschlagsmodell: <a href="https://open-meteo.com" target="_blank" rel="noopener noreferrer">Open-Meteo</a> (Modell, keine Messung). Basiskarte: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>. Flugzeugposition und Flugrouten werden auf derselben Karte dargestellt.</p>
+                </div>
+            </section>
+
+            <section class="panel view" id="airportView">
+                <div class="module glass airport-module">
+                    <div class="module-head">
+                        <div>
+                            <p>Airport Briefing</p>
+                            <h2>Flughafen-Informationen</h2>
+                        </div>
+                        <form class="airport-search" id="airportSearchForm">
+                            <label for="airportCodeInput">ICAO- oder IATA-Code</label>
+                            <div>
+                                <input id="airportCodeInput" type="text" maxlength="4" autocomplete="off" autocapitalize="characters" placeholder="z. B. EDDF" required>
+                                <button type="submit" class="primary" id="airportSearchButton">Suchen</button>
+                                <button type="button" class="ghost" id="refreshAirportButton" disabled>Aktualisieren</button>
+                            </div>
+                        </form>
+                    </div>
+                    <p class="airport-status" id="airportStatus" role="status">Gib einen Flughafen-Code ein, um Wetter, ATIS, Start- und Landebahnen sowie Frequenzen abzurufen.</p>
+                    <div class="chart-document-tabs airport-document-tabs" id="airportDocumentTabs" role="tablist" aria-label="Geöffnete Flughäfen">
+                        <span class="chart-tabs-empty">Noch keine Flughäfen geöffnet</span>
+                    </div>
+                    <div id="airportResults" class="airport-results" aria-live="polite"></div>
+                    <p class="airport-attribution">Wetter: NOAA Aviation Weather Center. ATIS: FAA Digital ATIS via atis.info (nur ausgewählte US-Flughäfen). Flughafen-, Bahn-, Navigationshilfe- und Frequenzdaten: OurAirports (Open Data). Navigationshilfen ersetzen keine veröffentlichten Anflugkarten; Daten können unvollständig oder veraltet sein und sind keine zugelassene Flugunterlage.</p>
+                </div>
+            </section>
+
+            <section class="panel view" id="takeoffView">
+                <div class="module glass performance-module">
+                    <div class="module-head">
+                        <div>
+                            <p>737-800 · X-PLANE 12 · SIMULATOR</p>
+                            <h2>Takeoff Performance</h2>
+                        </div>
+                        <label class="performance-unit">Einheiten
+                            <select name="unitSystem" form="takeoffForm" class="unit-system">
+                                <option value="metric">kg · ft · hPa</option>
+                                <option value="imperial">lb · ft · inHg</option>
+                            </select>
+                        </label>
+                    </div>
+                    <p class="performance-disclaimer">Nur für X-Plane 12 / Zibo 737-800. Physikalische Näherung, keine Boeing-Leistungsdaten und nicht für echten Flugbetrieb.</p>
+                    <form class="performance-form" id="takeoffForm">
+                        <div class="performance-fields">
+                            <label>Flughafenhöhe <span data-unit-label data-metric="ft" data-imperial="ft">(ft)</span>
+                                <input name="elevation" type="number" min="-1640.42" max="15000" step="any" required data-unit="elevation">
+                            </label>
+                            <label>QNH <span data-unit-label data-metric="hPa" data-imperial="inHg">(hPa)</span>
+                                <input name="qnh" type="number" min="850" max="1100" step="any" required data-unit="pressure">
+                            </label>
+                            <label>OAT (°C)
+                                <input name="oat" type="number" min="-60" max="60" step="any" required>
+                            </label>
+                            <label>TORA <span data-unit-label data-metric="ft" data-imperial="ft">(ft)</span>
+                                <input name="tora" type="number" min="3.28" max="39370.08" step="any" required data-unit="length" placeholder="z. B. 9813">
+                            </label>
+                            <label>TODA <span data-unit-label data-metric="ft" data-imperial="ft">(ft)</span>
+                                <input name="toda" type="number" min="3.28" max="39370.08" step="any" required data-unit="length" placeholder="Wie TORA">
+                            </label>
+                            <label>ASDA <span data-unit-label data-metric="ft" data-imperial="ft">(ft)</span>
+                                <input name="asda" type="number" min="3.28" max="39370.08" step="any" required data-unit="length" placeholder="Wie TORA">
+                            </label>
+                            <label>Bahnneigung (%)
+                                <input name="slope" type="number" min="-5" max="5" step="any" required placeholder="z. B. 0,3">
+                            </label>
+                            <label>Bahnausrichtung (°)
+                                <input name="runwayHeading" type="number" min="0" max="360" step="any" required>
+                            </label>
+                            <label>Windrichtung (°)
+                                <input name="windDirection" type="number" min="0" max="360" step="any" required>
+                            </label>
+                            <label>Windstärke (kt)
+                                <input name="windSpeed" type="number" min="0" max="100" step="any" required>
+                            </label>
+                            <label>Hindernishöhe über Platz (ft, optional)
+                                <input name="obstacleHeightFt" type="number" min="0" max="20000" step="any">
+                            </label>
+                            <label>Abstand hinter Bahnende (ft, optional)
+                                <input name="obstacleDistanceFt" type="number" min="0" max="100000" step="any">
+                            </label>
+                            <label>Startbahn
+                                <select name="runwayPreset">
+                                    <option value="manual">Manuell</option>
+                                    <option value="eddl-05r">EDDL 05R · +0,3 %</option>
+                                    <option value="eddl-23l">EDDL 23L · -0,3 %</option>
+                                </select>
+                            </label>
+                            <label class="performance-checkbox"><input name="sameRunwayDistances" type="checkbox" checked> TODA und ASDA = TORA</label>
+                            <label>Startgewicht <span data-unit-label data-metric="kg" data-imperial="lb">(kg)</span>
+                                <input name="weight" type="number" min="35000" max="100000" step="any" required data-unit="weight">
+                            </label>
+                            <label>Schwerpunkt (% MAC)
+                                <input name="cg" type="number" min="20" max="40" step="any" required>
+                            </label>
+                            <label>Klappen
+                                <select name="flaps"><option>1</option><option selected>5</option><option>15</option></select>
+                            </label>
+                            <label>Schubmodus
+                                <select name="derate"><option>TO</option><option>TO-1</option><option>TO-2</option></select>
+                            </label>
+                            <label>Bahnzustand
+                                <select name="surface"><option value="dry">Trocken</option><option value="wet">Nass</option><option value="contaminated">Schnee / Matsch</option></select>
+                            </label>
+                            <label class="performance-checkbox"><input name="antiIce" type="checkbox"> Anti-Ice eingeschaltet</label>
+                            <label class="performance-checkbox"><input name="bleed" type="checkbox" checked> Klimaanlage / Bleed eingeschaltet</label>
+                            <label>FMC V1 (kt, optional)
+                                <input name="fmcV1" type="number" min="80" max="220" step="any">
+                            </label>
+                            <label>FMC VR (kt, optional)
+                                <input name="fmcVr" type="number" min="80" max="220" step="any">
+                            </label>
+                            <label>FMC V2 (kt, optional)
+                                <input name="fmcV2" type="number" min="80" max="220" step="any">
+                            </label>
+                        </div>
+                        <button class="primary performance-submit" type="submit">Start berechnen</button>
+                    </form>
+                    <p class="performance-status" id="takeoffStatus" role="status" aria-live="polite"></p>
+                    <div class="performance-results" id="takeoffResults" aria-live="polite"></div>
+                    <details class="performance-debug">
+                        <summary>Takeoff-Referenzfall prüfen</summary>
+                        <div id="takeoffReferenceResults"></div>
+                    </details>
+                </div>
+            </section>
+
+            <section class="panel view" id="landingView">
+                <div class="module glass performance-module">
+                    <div class="module-head">
+                        <div>
+                            <p>737-800 · X-PLANE 12 · SIMULATOR</p>
+                            <h2>Landing Performance</h2>
+                        </div>
+                        <label class="performance-unit">Einheiten
+                            <select name="unitSystem" form="landingForm" class="unit-system">
+                                <option value="metric">kg · ft · hPa</option>
+                                <option value="imperial" selected>lb · ft · inHg</option>
+                            </select>
+                        </label>
+                    </div>
+                    <p class="performance-disclaimer">Nur für X-Plane 12 / Zibo 737-800. Physikalische Näherung, keine Boeing-Leistungsdaten und nicht für echten Flugbetrieb.</p>
+                    <form class="performance-form" id="landingForm">
+                        <div class="performance-fields">
+                            <label>Flughafenhöhe <span data-unit-label data-metric="ft" data-imperial="ft">(ft)</span>
+                                <input name="elevation" type="number" min="-1640.42" max="8400" step="any" required data-unit="elevation">
+                            </label>
+                            <label>QNH <span data-unit-label data-metric="hPa" data-imperial="inHg">(hPa)</span>
+                                <input name="qnh" type="number" min="25.69" max="32.04" step="any" required data-unit="pressure">
+                            </label>
+                            <label>OAT (°C)
+                                <input name="oat" type="number" min="-60" max="60" step="any" required>
+                            </label>
+                            <label>LDA <span data-unit-label data-metric="ft" data-imperial="ft">(ft)</span>
+                                <input name="lda" type="number" min="328.08" step="any" required data-unit="length">
+                            </label>
+                            <label>Bahnneigung (%)
+                                <input name="slope" type="number" min="-3" max="3" step="any" required>
+                            </label>
+                            <label>Bahnausrichtung (°)
+                                <input name="runwayHeading" type="number" min="0" max="360" step="any" required>
+                            </label>
+                            <label>Windrichtung (°)
+                                <input name="windDirection" type="number" min="0" max="360" step="any" required>
+                            </label>
+                            <label>Windstärke (kt)
+                                <input name="windSpeed" type="number" min="0" max="100" step="any" required>
+                            </label>
+                            <label>Böenzuschlag (kt)
+                                <input name="gust" type="number" min="0" max="60" step="any" required>
+                            </label>
+                            <label>Im Sim gemessener Bremsweg <span data-unit-label data-metric="ft" data-imperial="ft">(ft)</span> (optional)
+                                <input name="measuredBrakingDistanceFt" type="number" min="0" step="any" data-unit="length">
+                            </label>
+                            <label>Im Sim gemessene VREF (kt, optional)
+                                <input name="measuredVrefKt" type="number" min="0" max="250" step="any">
+                            </label>
+                            <label>Landegewicht <span data-unit-label data-metric="kg" data-imperial="kg">(kg)</span>
+                                <input name="weight" type="number" min="41400" max="79016" step="any" required data-unit="weightKg">
+                            </label>
+                            <label>Klappen
+                                <select name="flaps"><option selected>30</option><option>40</option></select>
+                            </label>
+                            <label>Autobrake
+                                <select name="autobrake">
+                                    <option>1</option><option>2</option><option selected>3</option><option>MAX</option>
+                                    <option value="all">Alle Stufen</option>
+                                </select>
+                            </label>
+                            <label>Bahnzustand
+                                <select name="surface"><option value="dry">Trocken</option><option value="wet">Nass</option><option value="contaminated">Schnee / Matsch</option></select>
+                            </label>
+                            <label class="performance-checkbox"><input name="reverseThrust" type="checkbox" checked> Umkehrschub verwenden</label>
+                        </div>
+                        <button class="primary performance-submit" type="submit">Landung berechnen</button>
+                    </form>
+                    <p class="performance-status" id="landingStatus" role="status" aria-live="polite"></p>
+                    <div class="performance-results" id="landingResults" aria-live="polite"></div>
+                </div>
+            </section>
+
+            <section class="panel view" id="fuelView">
+                <div class="module glass performance-module">
+                    <div class="module-head">
+                        <div>
+                            <p>737-800 · X-PLANE 12 · SIMULATOR</p>
+                            <h2>Fuel Planning</h2>
+                        </div>
+                        <label class="performance-unit">Einheiten
+                            <select name="unitSystem" form="fuelForm" class="unit-system">
+                                <option value="metric">kg · ft · hPa</option>
+                                <option value="imperial">lb · ft · inHg</option>
+                            </select>
+                        </label>
+                    </div>
+                    <p class="performance-disclaimer">Nur für X-Plane 12 / Zibo 737-800. Phasenbasiertes Näherungsmodell, keine Dispatch- oder Flugplanungsdaten. Der Schwerpunkt ist eine Simulator-Näherung aus ZFW-CG und konfigurierter effektiver Fuel-CG-Position, keine Ladeberechnung.</p>
+                    <form class="performance-form" id="fuelForm">
+                        <div class="performance-fields">
+                            <label>Strecke (nm)
+                                <input name="distance" type="number" min="1" max="10000" step="any" required>
+                            </label>
+                            <label>Reiseflughöhe <span data-unit-label data-metric="ft" data-imperial="ft">(ft)</span>
+                                <input name="altitude" type="number" min="0" max="41000" step="any" required data-unit="altitude">
+                            </label>
+                            <label>Windkomponente (kt, Rückenwind positiv)
+                                <input name="wind" type="number" min="-200" max="200" step="any" value="0" required>
+                            </label>
+                            <label>ISA-Abweichung (°C)
+                                <input name="isaDeviation" type="number" min="-30" max="30" step="any" value="0" required>
+                            </label>
+                            <label>Cost Index
+                                <input name="costIndex" type="number" min="0" max="200" step="any" value="30" required>
+                            </label>
+                            <label>ZFW <span data-unit-label data-metric="kg" data-imperial="lb">(kg)</span>
+                                <input name="zfw" type="number" min="41400" max="70000" step="any" required data-unit="weight">
+                            </label>
+                            <label>ZFW-Schwerpunkt (% MAC)
+                                <input name="zfwCg" type="number" min="20" max="40" step="any" required>
+                            </label>
+                            <label>Ausweichflugplatz (nm)
+                                <input name="alternate" type="number" min="0" max="5000" step="any" required>
+                            </label>
+                            <label>Taxi-Zeit (min)
+                                <input name="taxiMinutes" type="number" min="0" max="120" step="any" value="15" required>
+                            </label>
+                            <label>Contingency
+                                <select name="contingency"><option value="3">3 %</option><option value="5" selected>5 %</option><option value="10">10 %</option></select>
+                            </label>
+                            <label>Extra Fuel <span data-unit-label data-metric="kg" data-imperial="lb">(kg)</span>
+                                <input name="extra" type="number" min="0" max="20900" step="any" value="0" required data-unit="weight">
+                            </label>
+                            <label class="performance-checkbox"><input name="apuEnabled" type="checkbox"> APU-Verbrauch einrechnen</label>
+                            <label>APU-Zeit (min)
+                                <input name="apuMinutes" type="number" min="0" max="240" step="any" value="15">
+                            </label>
+                            <label class="performance-checkbox"><input name="antiIceFuel" type="checkbox"> Anti-Ice-Verbrauchszuschlag</label>
+                            <label class="performance-checkbox"><input name="weatherFuel" type="checkbox"> Wetterzuschlag</label>
+                        </div>
+                        <button class="primary performance-submit" type="submit">Fuel berechnen</button>
+                    </form>
+                    <p class="performance-status" id="fuelStatus" role="status" aria-live="polite"></p>
+                    <div class="performance-results" id="fuelResults" aria-live="polite"></div>
+                    <details class="performance-debug">
+                        <summary>SimBrief-Referenzfall prüfen</summary>
+                        <div id="fuelReferenceResults"></div>
+                    </details>
+                </div>
+            </section>
+
+            <section class="panel view" id="notesView">
+                <div class="module glass notes-module">
+                    <div class="module-head">
+                        <div>
+                            <p>QUICK NOTES</p>
+                            <h2>Notizen</h2>
+                        </div>
+                        <button type="button" class="ghost" id="notesClearButton">Alle Notizen löschen</button>
+                    </div>
+                    <div class="notes-toolbar" role="toolbar" aria-label="Notizwerkzeuge">
+                        <button type="button" class="primary" id="notesDrawTool" aria-pressed="true">Stift</button>
+                        <button type="button" id="notesTextTool" aria-pressed="false">Text platzieren</button>
+                        <button type="button" id="notesEraseTool" aria-pressed="false">Radierer</button>
+                        <label class="notes-color" for="notesColor">Farbe
+                            <input id="notesColor" type="color" value="#102a43" aria-label="Notizfarbe auswählen">
+                        </label>
+                        <label class="notes-text-entry" for="notesTextInput">Text
+                            <textarea id="notesTextInput" rows="2" maxlength="500" placeholder="Text eingeben, dann Text platzieren wählen und die Leinwand antippen"></textarea>
+                        </label>
+                        <span class="notes-status" id="notesStatus" role="status" aria-live="polite">Notizen werden auf diesem Gerät gespeichert.</span>
+                    </div>
+                    <div class="notes-canvas-wrap">
+                        <canvas id="notesCanvas" aria-label="Notizleinwand zum Zeichnen oder Platzieren von Text"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel view" id="filesView">
+                <div class="module glass">
+                    <div class="file-head">
+                        <div>
+                            <p>Local</p>
+                            <h2>Dateien</h2>
+                        </div>
+                        <label class="file-pick">
+                            Datei wählen
+                            <input id="fileInput" type="file" accept="image/*,application/pdf,text/*,.txt,.csv,.json,.xml,.html,.htm">
+                        </label>
+                    </div>
+                    <div class="file-meta" id="fileMeta">Keine Datei ausgewählt</div>
+                    <div class="file-tools hidden" id="pdfTools">
+                        <button type="button" id="pdfPrev">Zurück</button>
+                        <span id="pdfPageLabel">PDF</span>
+                        <button type="button" id="pdfNext">Weiter</button>
+                        <button type="button" id="pdfZoomOut">-</button>
+                        <button type="button" id="pdfZoomIn">+</button>
+                    </div>
+                    <div class="file-viewer" id="fileViewer"></div>
+                </div>
+            </section>
+
+           
+        </main>
+    </div>
+
+    <script src="zibo-normal-checklists.js"></script>
+    <script src="abnormal-qrh.js"></script>
+    <script src="abnormal-qrh-pages.js"></script>
+    <script src="vendor/leaflet/leaflet.js"></script>
+    <script src="vendor/pdf.min.js"></script>
+    <script src="performance-calculator.js"></script>
+    <script src="performance-ui.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

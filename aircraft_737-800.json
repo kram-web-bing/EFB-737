@@ -1,0 +1,343 @@
+{
+  "modelVersion": 1,
+  "aircraft": {
+    "mtowKg": 79016,
+    "mlwKg": 66361,
+    "mzfwKg": 62732,
+    "oewKg": 41400,
+    "fuelCapacityKg": 20900,
+    "wingAreaM2": 124.6,
+    "engineRatedLbf": 26300,
+    "derateThrustLbf": {
+      "TO": 26300,
+      "TO-1": 24000,
+      "TO-2": 22000
+    },
+    "maxOperatingElevationFt": 8400
+  },
+  "units": {
+    "kgPerLb": 0.45359237,
+    "metersPerFoot": 0.3048,
+    "hPaPerInHg": 33.8638866667,
+    "metersPerNauticalMile": 1852,
+    "metersPerSecondPerKnot": 0.5144444444,
+    "knotsPerMeterPerSecond": 1.9438444924,
+    "newtonsPerPoundForce": 4.4482216153,
+    "pascalsPerHpa": 100
+  },
+  "atmosphere": {
+    "seaLevelPressureHpa": 1013.25,
+    "seaLevelTemperatureC": 15,
+    "temperatureLapseCPerMeter": 0.0065,
+    "pressureAltitudeCorrectionFtPerHpa": 27,
+    "gasConstantAir": 287.05,
+    "gravityMPerS2": 9.80665,
+    "isaPressureExponent": 5.25588,
+    "isaTemperatureBase": 0.0065,
+    "isaPressureBase": 0.0000225577,
+    "kelvinOffsetC": 273.15,
+    "seaLevelDensityKgM3": 1.225,
+    "minimumPressureRatio": 0.01
+  },
+  "takeoff": {
+    "plausibility": {
+      "minimumRunwayMeters": 800,
+      "maximumRunwayMeters": 6000,
+      "maximumElevationFt": 10000,
+      "maximumSlopePercent": 2,
+      "minimumQnhHpa": 940,
+      "maximumQnhHpa": 1060,
+      "minimumWeightKg": 40000,
+      "inputMinimumRunwayMeters": 1,
+      "inputMaximumElevationFt": 15000,
+      "inputMinimumQnhHpa": 850,
+      "inputMaximumQnhHpa": 1100,
+      "inputMaximumSlopePercent": 5,
+      "inputMaximumRunwayMeters": 12000,
+      "inputMinimumWeightKg": 35000,
+      "inputMaximumWeightKg": 100000
+    },
+    "cgRangePercentMac": { "minimum": 20, "maximum": 40 },
+    "referenceCase": {
+      "elevationMeters": 45,
+      "qnhHpa": 1013.25,
+      "oatC": 15,
+      "toraMeters": 2991.0024,
+      "todaMeters": 2991.0024,
+      "asdaMeters": 2991.0024,
+      "slopePercent": 0,
+      "windDirection": 0,
+      "windSpeedKt": 0,
+      "runwayHeading": 50,
+      "surface": "dry",
+      "weightKg": 67800,
+      "cgPercentMac": 30,
+      "flaps": "5",
+      "derate": "TO",
+      "antiIce": false,
+      "bleed": true,
+      "expectedV1Kt": 138,
+      "expectedVrKt": 140,
+      "expectedV2Kt": 149,
+      "expectedTrimUnits": 4.44
+    },
+    "vSpeedReferencePoints": [
+      { "flaps": "5", "weightKg": 67800, "v1Kt": 138, "vrKt": 140, "v2Kt": 149, "trimUnits": 4.44 },
+      { "flaps": "5", "weightKg": 73300, "v1Kt": 144, "vrKt": 146, "v2Kt": 154, "trimUnits": 4.72 }
+    ],
+    "clMaxByFlaps": {
+      "1": 1.6,
+      "5": 1.96,
+      "15": 2.0
+    },
+    "v2Multiplier": 1.15,
+    "minimumV2StallRatio": 1.13,
+    "v1SearchIterations": 28,
+    "v1MinimumSearchStallRatio": 0.8,
+    "vrBelowV2Kt": 5,
+    "v1BelowVrKt": 3,
+    "dragCoefficientZeroLift": 0.035,
+    "inducedDragFactor": 0.045,
+    "rollingFrictionBySurface": {
+      "dry": 0.02,
+      "wet": 0.03,
+      "contaminated": 0.05
+    },
+    "brakingFrictionBySurface": {
+      "dry": 0.35,
+      "wet": 0.2,
+      "contaminated": 0.1
+    },
+    "crosswindLimitKtBySurface": {
+      "dry": 33,
+      "wet": 25,
+      "contaminated": 15
+    },
+    "brakeEnergyLimitJ": 200000000,
+    "minimumOeiClimbGradient": 0.024,
+    "oeiThrustEffectiveness": 1.0,
+    "climbDragFraction": 0.12,
+    "minimumAccelerationMPerS2": 0.05,
+    "minimumThrustTemperatureRatio": 0.5,
+    "integrationStepMPerS": 0.75,
+    "thrustTemperatureLapsePerC": 0.003,
+    "thrustSpeedLossAt140Kt": 0.12,
+    "thrustSpeedLossReferenceKt": 140,
+    "maxLiftWeightFraction": 0.95,
+    "takeoffLiftFractionAtAcceleration": 0.72,
+    "minimumDynamicPressureAreaM2": 1,
+    "v1ReductionKtBySurface": {
+      "dry": 0,
+      "wet": 5,
+      "contaminated": 8
+    },
+    "rotationTimeSeconds": 3,
+    "flareTimeSeconds": 2,
+    "reactionTimeSeconds": 2,
+    "engineFailureDelaySeconds": 1,
+    "maxFlexThrustReduction": 0.25,
+    "flexThrustReductionPerDegreeC": 0.004,
+    "densityThrustExponent": 0.7,
+    "antiIceThrustReduction": 0.03,
+    "bleedThrustReduction": 0.01,
+    "trimByCgPercentMac": [
+      { "cg": 20, "units": 3.7 },
+      { "cg": 30, "units": 4.8 },
+      { "cg": 40, "units": 5.9 }
+    ],
+    "trimFlapOffsetUnits": {
+      "1": 0,
+      "5": 0.2,
+      "15": 0.6
+    }
+  },
+  "landing": {
+    "vrefStallRatio": 1.3,
+    "clMaxByFlaps": {
+      "30": 2.75,
+      "40": 2.85
+    },
+    "autobrakeDecelerationMPerS2": {
+      "1": 1.34,
+      "2": 1.92,
+      "3": 2.37,
+      "MAX": 3.08
+    },
+    "plausibility": {
+      "minimumLdaMeters": 800,
+      "maximumLdaMeters": 5000,
+      "maximumSlopePercent": 2
+    },
+    "crosswindLimitKtBySurface": {
+      "dry": 33,
+      "wet": 25,
+      "contaminated": 15
+    },
+    "decelerationFactorBySurface": {
+      "dry": 1.0,
+      "wet": 0.8,
+      "contaminated": 0.55
+    },
+    "airDistanceHeightMeters": 15.24,
+    "glideAngleDegrees": 3,
+    "flareTimeSeconds": 1.25,
+    "reverseThrustDistanceReductionBySurface": {
+      "dry": 0.1,
+      "wet": 0.05,
+      "contaminated": 0
+    },
+    "dispatchFactorDry": 1.67,
+    "additionalFactorWet": 1.15,
+    "additionalFactorContaminated": 1.25,
+    "goAroundClimbGradient": 0.025,
+    "minimumGoAroundClimbGradient": 0.024,
+    "minimumDecelerationMPerS2": 0.2,
+    "minimumWindCorrectionKt": 5,
+    "maximumWindCorrectionKt": 20
+  },
+  "fuel": {
+    "referenceCase": {
+      "distanceNm": 197,
+      "cruiseAltitudeFt": 23000,
+      "windComponentKt": 12,
+      "isaDeviationC": -5,
+      "costIndex": 38,
+      "zfwKg": 60461,
+      "zfwCgPercentMac": 30,
+      "alternateNm": 200,
+      "taxiMinutes": 15,
+      "contingencyPercent": 5,
+      "extraFuelKg": 0,
+      "expectedTripFuelKg": 1808,
+      "expectedFlightTimeMinutes": 39
+    },
+    "maxZfwInputKg": 70000,
+    "weightLimitsKg": {
+      "mzfw": 62732,
+      "mtow": 79016
+    },
+    "alternateDefaultNm": 200,
+    "alternateCruiseAltitudeFt": 10000,
+    "alternateAltitudeByDistanceNm": [
+      { "distanceNm": 0, "altitudeFt": 10000 },
+      { "distanceNm": 100, "altitudeFt": 10000 },
+      { "distanceNm": 150, "altitudeFt": 16000 },
+      { "distanceNm": 200, "altitudeFt": 23000 },
+      { "distanceNm": 300, "altitudeFt": 30000 },
+      { "distanceNm": 500, "altitudeFt": 35000 }
+    ],
+    "maxCruiseAltitudeFt": 41000,
+    "effectiveFuelCgPercentMac": 25,
+    "taxiBurnKgPerMinute": 15,
+    "apuBurnKgPerMinute": 8,
+    "antiIceFuelFactor": 1.03,
+    "weatherFuelFactor": 1.05,
+    "minimumContingencyHoldingMinutes": 5,
+    "cruiseReferenceWeightKg": 65000,
+    "weightChangePer1000Kg": 0.004,
+    "referenceCostIndex": 38,
+    "cruiseBurnChangePerCostIndex": 0.001,
+    "cruiseTasChangeKtPerCostIndex": 0.25,
+    "cruiseBurnChangePerIsaC": 0.001,
+    "cruiseTasChangeKtPerIsaC": 0.35,
+    "minimumGroundspeedKt": 100,
+    "minimumFuelFactor": 0.5,
+    "initialFuelEstimateKg": 3000,
+    "altitudeSearchIterations": 32,
+    "fuelIterationCount": 3,
+    "fuelIterationToleranceKg": 1,
+    "phaseProfiles": [
+      {
+        "altitudeFt": 0,
+        "climbFuelKg": 0,
+        "climbTimeMinutes": 0,
+        "climbDistanceNm": 0,
+        "descentFuelKg": 0,
+        "descentTimeMinutes": 0,
+        "descentDistanceNm": 0,
+        "cruiseBurnKgPerHour": 2800,
+        "cruiseTasKt": 0
+      },
+      {
+        "altitudeFt": 5000,
+        "climbFuelKg": 225,
+        "climbTimeMinutes": 5,
+        "climbDistanceNm": 20,
+        "descentFuelKg": 60,
+        "descentTimeMinutes": 3.5,
+        "descentDistanceNm": 15,
+        "cruiseBurnKgPerHour": 2900,
+        "cruiseTasKt": 270
+      },
+      {
+        "altitudeFt": 10000,
+        "climbFuelKg": 450,
+        "climbTimeMinutes": 10,
+        "climbDistanceNm": 40,
+        "descentFuelKg": 120,
+        "descentTimeMinutes": 7,
+        "descentDistanceNm": 30,
+        "cruiseBurnKgPerHour": 2800,
+        "cruiseTasKt": 300
+      },
+      {
+        "altitudeFt": 20000,
+        "climbFuelKg": 750,
+        "climbTimeMinutes": 12,
+        "climbDistanceNm": 55,
+        "descentFuelKg": 260,
+        "descentTimeMinutes": 11,
+        "descentDistanceNm": 52,
+        "cruiseBurnKgPerHour": 2750,
+        "cruiseTasKt": 390
+      },
+      {
+        "altitudeFt": 23000,
+        "climbFuelKg": 1075,
+        "climbTimeMinutes": 14,
+        "climbDistanceNm": 70,
+        "descentFuelKg": 280,
+        "descentTimeMinutes": 15,
+        "descentDistanceNm": 57,
+        "cruiseBurnKgPerHour": 2700,
+        "cruiseTasKt": 410
+      },
+      {
+        "altitudeFt": 30000,
+        "climbFuelKg": 1700,
+        "climbTimeMinutes": 25,
+        "climbDistanceNm": 125,
+        "descentFuelKg": 420,
+        "descentTimeMinutes": 18,
+        "descentDistanceNm": 90,
+        "cruiseBurnKgPerHour": 2500,
+        "cruiseTasKt": 430
+      },
+      {
+        "altitudeFt": 35000,
+        "climbFuelKg": 2050,
+        "climbTimeMinutes": 30,
+        "climbDistanceNm": 150,
+        "descentFuelKg": 600,
+        "descentTimeMinutes": 22,
+        "descentDistanceNm": 115,
+        "cruiseBurnKgPerHour": 2400,
+        "cruiseTasKt": 450
+      },
+      {
+        "altitudeFt": 41000,
+        "climbFuelKg": 2450,
+        "climbTimeMinutes": 37,
+        "climbDistanceNm": 190,
+        "descentFuelKg": 750,
+        "descentTimeMinutes": 27,
+        "descentDistanceNm": 145,
+        "cruiseBurnKgPerHour": 2300,
+        "cruiseTasKt": 460
+      }
+    ],
+    "finalReserveMinutes": 30,
+    "finalReserveHoldingAltitudeFt": 1500,
+    "holdingBurnKgPerHour": 2600
+  }
+}
